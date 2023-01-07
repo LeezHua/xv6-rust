@@ -1,5 +1,7 @@
 K=kernel
 U=user
+KERNEL = target/release/libkernel.so
+
 
 OBJS = \
   $K/entry.o \
@@ -10,7 +12,7 @@ OBJS = \
   $K/kalloc.o \
   $K/spinlock.o \
   $K/string.o \
-  $K/main.o \
+  $(KERNEL) \
   $K/vm.o \
   $K/proc.o \
   $K/swtch.o \
@@ -29,6 +31,9 @@ OBJS = \
   $K/kernelvec.o \
   $K/plic.o \
   $K/virtio_disk.o
+
+$(KERNEL) : 
+	cargo build --release
 
 # riscv64-unknown-elf- or riscv64-linux-gnu-
 # perhaps in /opt/riscv/bin
