@@ -6,8 +6,7 @@ use super::{
 };
 
 // 地址结构
-#[repr(C)]
-#[derive(Clone, Copy)]
+#[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Addr {
     pub value: usize,
 }
@@ -15,6 +14,19 @@ pub struct Addr {
 impl Debug for Addr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
         f.write_fmt(format_args!("Addr: {:#x}", self.value))
+    }
+}
+
+impl<T> From<*mut T> for Addr {
+    fn from(ptr: *mut T) -> Self {
+        Self {
+            value: ptr as usize,
+        }
+    }
+}
+impl<T> Into<*mut T> for Addr {
+    fn into(self) -> *mut T {
+        self.value as *mut T
     }
 }
 
@@ -61,7 +73,7 @@ impl Addr {
 // 页面结构
 #[derive(Clone, Copy)]
 pub struct Page {
-    addr: usize,
+    pub addr: usize,
 }
 
 impl Debug for Page {
@@ -108,9 +120,19 @@ impl From<Addr> for Page {
         }
     }
 }
-
 impl Into<Addr> for Page {
     fn into(self) -> Addr {
         Addr { value: self.addr }
+    }
+}
+
+impl<T> From<*mut T> for Page {
+    fn from(ptr: *mut T) -> Self {
+        Self { addr: ptr as usize }
+    }
+}
+impl<T> Into<*mut T> for Page {
+    fn into(self) -> *mut T {
+        self.addr as *mut T
     }
 }

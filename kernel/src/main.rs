@@ -4,6 +4,8 @@
 #![feature(alloc_error_handler)]
 #![allow(unused)]
 
+extern crate alloc;
+
 #[path = "board/qemu.rs"]
 mod board;
 

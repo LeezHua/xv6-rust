@@ -14,7 +14,7 @@ SECTIONS
 		*(.rodata .rodata.*)
 		*(.srodata .srodata.*)
 	}
-	. = ALIGN(4K)
+	. = ALIGN(4K);
 	.data : {
 		*(.data .data.*)
 		*(.sdata .sdata.*)
