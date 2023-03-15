@@ -9,7 +9,7 @@ use riscv::register::{
 
 use crate::{
     syscall::syscall,
-    task::{run_next_task, task::TaskOption},
+    task::{run_next_task_kill, run_next_task_suspend},
     trap::interrupt::set_next_clock_interrupt,
 };
 
@@ -43,15 +43,15 @@ pub fn user_trap_handler(cx: &mut TrapContext) {
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
             println!("[kernel] PageFault in application, kernel killed it.");
-            run_next_task(TaskOption::Kill)
+            run_next_task_kill()
         }
         Trap::Exception(Exception::IllegalInstruction) => {
             println!("[kernel] IllegalInstruction in application, kernel killed it.");
-            run_next_task(TaskOption::Kill)
+            run_next_task_kill()
         }
         Trap::Interrupt(Interrupt::SupervisorTimer) => {
             set_next_clock_interrupt();
-            run_next_task(TaskOption::Suspend);
+            run_next_task_suspend();
         }
         _ => {
             panic!(

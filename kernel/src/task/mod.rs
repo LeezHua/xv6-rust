@@ -109,18 +109,14 @@ pub fn run_first_task() {
     TASK_MANAGER.run_first_task();
 }
 
-pub fn run_next_task(action: TaskOption) {
-    match action {
-        TaskOption::Suspend => {
-            TASK_MANAGER.mark_current_runnable();
-            TASK_MANAGER.run_next_task();
-        }
-        TaskOption::Kill => {
-            TASK_MANAGER.mark_current_zombie();
-            TASK_MANAGER.run_next_task();
-        }
-        _ => panic!("Invalid operation in run_next_task!"),
-    }
+pub fn run_next_task_kill() {
+    TASK_MANAGER.mark_current_zombie();
+    TASK_MANAGER.run_next_task();
+}
+
+pub fn run_next_task_suspend() {
+    TASK_MANAGER.mark_current_runnable();
+    TASK_MANAGER.run_next_task();
 }
 
 pub use loader::load_apps;
