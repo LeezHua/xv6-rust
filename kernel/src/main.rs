@@ -1,6 +1,7 @@
 #![no_std]
 #![no_main]
 #![feature(panic_info_message)]
+#![feature(alloc_error_handler)]
 #![allow(unused)]
 
 #[path = "board/qemu.rs"]
@@ -9,6 +10,8 @@ mod board;
 #[macro_use]
 mod console;
 mod lang_items;
+mod logo;
+mod mem;
 mod sbi;
 mod sync;
 pub mod syscall;
@@ -17,16 +20,18 @@ mod trap;
 
 use core::arch::global_asm;
 
+use sbi::shutdown;
+
 global_asm!(include_str!("entry.S"));
 global_asm!(include_str!("link_app.S"));
 
 #[no_mangle]
 pub fn main() {
     clear_bss();
-    println!("[kernel] Hello world!");
+    logo::print_logo();
     trap::init();
-    task::load_apps();
-    task::run_first_task();
+    mem::init();
+    shutdown()
 }
 
 // init .bss segment.
