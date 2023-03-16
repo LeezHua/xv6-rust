@@ -33,6 +33,7 @@ pub fn main() {
     logo::print_logo();
     trap::init();
     mem::init();
+
     shutdown()
 }
 

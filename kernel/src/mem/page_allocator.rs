@@ -99,7 +99,7 @@ impl PageAlloc for PageAllocator {
             }
         } else {
             let res = self.next;
-            self.next.value += PAGE_SIZE;
+            self.next.bits += PAGE_SIZE;
             Some(res.into())
         }
     }
@@ -133,7 +133,7 @@ impl PageTracker {
     pub fn new(page: Page) -> Self {
         Self { page }
     }
-    pub fn get(&self) -> Page {
+    pub fn page(&self) -> Page {
         self.page
     }
 }

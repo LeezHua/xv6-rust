@@ -2,66 +2,76 @@ use core::fmt::{self, Debug, Formatter};
 
 use super::{
     page_table::PageTableEntry,
-    param::{PAGE_BITS, PAGE_SIZE, PTE_NUM_PER_PAGE, PTE_NUM_PER_PAGE_BITS},
+    param::{PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS, PTE_NUM_PER_PAGE, PTE_NUM_PER_PAGE_BITS},
 };
 
 // 地址结构
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
 pub struct Addr {
-    pub value: usize,
+    pub bits: usize,
 }
 
 impl Debug for Addr {
     fn fmt(&self, f: &mut Formatter<'_>) -> fmt::Result {
-        f.write_fmt(format_args!("Addr: {:#x}", self.value))
+        f.write_fmt(format_args!("Addr: {:#x}", self.bits))
     }
 }
 
 impl<T> From<*mut T> for Addr {
     fn from(ptr: *mut T) -> Self {
-        Self {
-            value: ptr as usize,
-        }
+        Self { bits: ptr as usize }
     }
 }
 impl<T> Into<*mut T> for Addr {
     fn into(self) -> *mut T {
-        self.value as *mut T
+        self.bits as *mut T
     }
 }
 
 impl Addr {
     pub fn empty() -> Self {
-        Addr { value: 0 }
+        Addr { bits: 0 }
     }
 
     pub fn new(addr: usize) -> Self {
-        Addr { value: addr }
+        Addr { bits: addr }
+    }
+
+    // 转换成页表项
+    pub fn to_pte_bits(&self) -> usize {
+        (self.bits >> PAGE_BITS) << PTE_FLAGS_BITS
     }
 
     // 页内偏移
     pub fn page_offset(&self) -> usize {
-        self.value & PAGE_SIZE
+        self.bits & PAGE_SIZE
     }
     // 是否页对齐
     pub fn aligned(&self) -> bool {
         self.page_offset() == 0
     }
     // 向下页对齐
-    pub fn align_down(&mut self) -> Self {
-        self.value &= !(PAGE_SIZE - 1);
-        *self
+    pub fn align_down(&self) -> Self {
+        Self {
+            bits: self.bits & !(PAGE_SIZE - 1),
+        }
     }
     // 向上页对齐
-    pub fn align_up(&mut self) -> Self {
-        self.value = (self.value + PAGE_SIZE - 1) & !(PAGE_SIZE - 1);
-        *self
+    pub fn align_up(&self) -> Self {
+        Self {
+            bits: (self.bits + PAGE_SIZE - 1) & !(PAGE_SIZE - 1),
+        }
+    }
+    pub fn add(&self, offset: usize) -> Self {
+        Self {
+            bits: self.bits + offset,
+        }
     }
 
     // 获取虚拟地址的三级页表项偏移
     pub fn get_indexes(&self) -> [usize; 3] {
         let mut res = [0usize; 3];
-        let mut va = self.value >> PAGE_BITS;
+        let mut va = self.bits >> PAGE_BITS;
         for i in 0..3 {
             res[i] = va & (PTE_NUM_PER_PAGE - 1);
             va >>= PTE_NUM_PER_PAGE_BITS;
@@ -92,22 +102,30 @@ impl Page {
         }
     }
 
+    // 清理页面
+    pub fn clean_page(&self) {
+        let dst = self.addr as *mut u8;
+        unsafe {
+            core::ptr::write_bytes(dst, 0, PAGE_SIZE);
+        }
+    }
+
     // 读取字节序列
-    pub fn get_bytes(&self) -> &[u8] {
+    pub fn get_bytes(&self) -> &'static [u8] {
         let src = self.addr as *const u8;
         unsafe { core::slice::from_raw_parts(src, PAGE_SIZE) }
     }
-    pub fn get_bytes_mut(&self) -> &mut [u8] {
+    pub fn get_bytes_mut(&self) -> &'static mut [u8] {
         let src = self.addr as *mut u8;
         unsafe { core::slice::from_raw_parts_mut(src, PAGE_SIZE) }
     }
 
     // 读取页表项序列
-    pub fn get_ptes(&self) -> &[PageTableEntry] {
+    pub fn get_ptes(&self) -> &'static [PageTableEntry] {
         let src = self.addr as *const PageTableEntry;
-        unsafe { core::slice::from_raw_parts(src, PAGE_SIZE) }
+        unsafe { core::slice::from_raw_parts(src, PTE_NUM_PER_PAGE) }
     }
-    pub fn get_ptes_mut(&self) -> &mut [PageTableEntry] {
+    pub fn get_ptes_mut(&self) -> &'static mut [PageTableEntry] {
         let src = self.addr as *mut PageTableEntry;
         unsafe { core::slice::from_raw_parts_mut(src, PAGE_SIZE) }
     }
@@ -116,13 +134,13 @@ impl Page {
 impl From<Addr> for Page {
     fn from(addr: Addr) -> Self {
         Self {
-            addr: addr.value & !(PAGE_SIZE - 1),
+            addr: addr.bits & !(PAGE_SIZE - 1),
         }
     }
 }
 impl Into<Addr> for Page {
     fn into(self) -> Addr {
-        Addr { value: self.addr }
+        Addr { bits: self.addr }
     }
 }
 
