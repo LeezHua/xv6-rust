@@ -2,15 +2,20 @@ use core::usize::MIN;
 
 use crate::{
     mem::{address::Addr, page_table::PTEFlags},
-    mem_layout::{PAGE_SIZE, TRAMPOLINE, TRAP_FRAME},
+    mem_layout::{PAGE_SIZE, TRAMPOLINE, TRAP_FRAME, USER_STACK_SIZE},
     sync::UPSafeCell,
 };
+use alloc::collections::BTreeMap;
 use lazy_static::*;
 
-use super::{page_allocator::kalloc, page_table::PageTable};
+use super::{
+    page_allocator::{kalloc, PageTracker},
+    page_table::PageTable,
+};
 
 pub struct UserSpace {
     page_table: PageTable,
+    data_pages: BTreeMap<Addr, PageTracker>,
     size: usize,
 }
 
@@ -18,6 +23,7 @@ impl UserSpace {
     pub fn new() -> Self {
         Self {
             page_table: PageTable::new(),
+            data_pages: BTreeMap::new(),
             size: 0,
         }
     }
@@ -26,10 +32,9 @@ impl UserSpace {
         while (start < end) {
             let page_tracker = kalloc().unwrap();
             let pa: Addr = page_tracker.page().into();
-            self.page_table.push_page(page_tracker);
+            self.data_pages.insert(pa, page_tracker);
             self.size += PAGE_SIZE;
-            self.page_table
-                .map_range(start, pa, PAGE_SIZE, perm | PTEFlags::U);
+            self.page_table.map(start, pa, perm | PTEFlags::U);
 
             start = start.add(PAGE_SIZE);
         }
@@ -48,34 +53,48 @@ impl UserSpace {
     }
 
     // 映射 trampoline 和 trampframe
-    pub fn init_pagetable(&mut self) {
+    fn init_pagetable(&mut self) -> Addr {
         extern "C" {
             fn trampoline();
         }
 
         // 映射 trampoline
-        self.page_table.map_range(
+        self.page_table.map(
             Addr::new(TRAMPOLINE),
             Addr::new(trampoline as usize),
-            PAGE_SIZE,
             PTEFlags::R | PTEFlags::X,
         );
 
         // 为 trapframe 分配内存
         let page_tracker = kalloc().unwrap();
         let pa: Addr = page_tracker.page().into();
-        self.page_table.push_page(page_tracker);
+        self.data_pages.insert(pa, page_tracker);
 
         // 映射 trapframe
-        self.page_table.map_range(
-            Addr::new(TRAP_FRAME),
-            pa,
-            PAGE_SIZE,
-            PTEFlags::R | PTEFlags::W,
-        );
+        self.page_table
+            .map(Addr::new(TRAP_FRAME), pa, PTEFlags::R | PTEFlags::W);
+
+        // 返回 trapframe 的物理地址
+        pa
     }
 
-    pub fn init_from_elf(&mut self, elf_data: &[u8]) {
+    fn init_stack(&mut self, va: Addr) -> Addr {
+        let mut a = 0usize;
+        while (a < USER_STACK_SIZE) {
+            let page_tracker = kalloc().unwrap();
+            let pa: Addr = page_tracker.page().into();
+            self.data_pages.insert(pa, page_tracker);
+
+            self.page_table
+                .map(va.add(a), pa, PTEFlags::R | PTEFlags::W | PTEFlags::U);
+            a += PAGE_SIZE;
+        }
+        self.page_table.walk_addr(va).unwrap()
+    }
+
+    pub fn init_from_elf(&mut self, elf_data: &[u8]) -> (Addr, Addr) {
+        let trap_frame = self.init_pagetable();
+
         let elf = xmas_elf::ElfFile::new(elf_data).unwrap();
         let elf_header = elf.header;
         let magic = elf_header.pt1.magic;
@@ -83,6 +102,7 @@ impl UserSpace {
 
         let ph_count = elf_header.pt2.ph_count();
 
+        let mut prog_end = Addr::new(0);
         for i in 0..ph_count {
             let ph = elf.program_header(i).unwrap();
             if ph.get_type().unwrap() == xmas_elf::program::Type::Load {
@@ -105,8 +125,13 @@ impl UserSpace {
                     start,
                     &elf.input[ph.offset() as usize..(ph.offset() + ph.file_size()) as usize],
                 );
+                prog_end = end;
             }
         }
+
+        let stack_bottom = self.init_stack(prog_end.add(PAGE_SIZE));
+
+        (stack_bottom, trap_frame)
     }
     pub fn print_user_pagetable(&self) {
         self.page_table.print_page_table();
@@ -126,7 +151,6 @@ pub fn userspace_test() {
     };
 
     let mut user = UserSpace::new();
-    user.init_pagetable();
     user.init_from_elf(app0);
     user.print_user_pagetable();
     println!("user space test success!");

@@ -2,7 +2,7 @@ use crate::mem::address::Page;
 use crate::mem_layout::{
     MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN, PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS,
 };
-use alloc::collections::BTreeMap;
+use alloc::vec::Vec;
 use bitflags::*;
 use core::fmt::{self, Debug, Formatter};
 use rand::{rngs::SmallRng, Rng, SeedableRng};
@@ -75,7 +75,7 @@ impl PageTableEntry {
 
 pub struct PageTable {
     root: Addr,
-    pages: BTreeMap<Addr, PageTracker>,
+    tables: Vec<PageTracker>,
 }
 
 impl PageTable {
@@ -83,20 +83,10 @@ impl PageTable {
         let page_tracker = kalloc().unwrap();
         let page = page_tracker.page();
         page.clean_page();
-        let mut pages: BTreeMap<Addr, PageTracker> = BTreeMap::new();
-        let root = Addr::new(page.addr);
-        pages.insert(root, page_tracker);
-        Self { root, pages }
-    }
-
-    pub fn push_page(&mut self, page_tracker: PageTracker) {
-        self.pages
-            .insert(Addr::new(page_tracker.page().addr), page_tracker);
-    }
-
-    // 释放一个页面
-    pub fn remove_page(&mut self, addr: Addr) {
-        self.pages.remove(&addr);
+        let mut tables: Vec<PageTracker> = Vec::new();
+        let root = page.into();
+        tables.push(page_tracker);
+        Self { root, tables }
     }
 
     // 给定一个地址，获取其 0 级页表项
@@ -137,7 +127,7 @@ impl PageTable {
                     let page = page_tracker.page();
                     page.clean_page();
                     *pte = PageTableEntry::new(page.into(), PTEFlags::V);
-                    self.pages.insert(page.into(), page_tracker);
+                    self.tables.push(page_tracker);
                 } else {
                     break; // 内存不足
                 }
@@ -164,16 +154,12 @@ impl PageTable {
     }
 
     // 映射一个页面
-    fn map(&mut self, va: Addr, pa: Addr, flags: PTEFlags) {
+    pub fn map(&mut self, va: Addr, pa: Addr, flags: PTEFlags) {
         assert!(va.bits <= MAX_VIRT_ADDR);
         assert!(pa.bits <= MAX_PHYS_ADDR);
         let pte = self.walk_alloc(va).unwrap();
         assert!(!pte.valid(), "{:?} has been mapped", *pte);
         *pte = PageTableEntry::new(pa, flags | PTEFlags::V);
-    }
-
-    pub fn contain(&self, key: Addr) -> bool {
-        self.pages.contains_key(&key)
     }
 
     // 映射一段连续的页面

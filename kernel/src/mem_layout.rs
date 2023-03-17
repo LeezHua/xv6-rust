@@ -1,5 +1,6 @@
 /* memory relative parameter */
-
+pub const KERNEL_STACK_SIZE: usize = 0x2000;
+pub const USER_STACK_SIZE: usize = 0x2000;
 pub const KERNEL_HEAP_SIZE: usize = 0x20_0000; // kernel heap allocator size
 pub const PAGE_SIZE: usize = 4096; // bytes per page
 pub const PAGE_BITS: usize = 12; // bits of offset within a page

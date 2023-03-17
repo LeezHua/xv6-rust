@@ -79,6 +79,13 @@ impl Addr {
         }
         res
     }
+
+    pub fn get_value<T>(&self) -> &'static T {
+        unsafe { (self.bits as *const T).as_ref().unwrap() }
+    }
+    pub fn get_value_mut<T>(&self) -> &'static mut T {
+        unsafe { (self.bits as *mut T).as_mut().unwrap() }
+    }
 }
 
 // 页面结构

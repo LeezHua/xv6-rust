@@ -1,10 +1,11 @@
+use alloc::collections::BTreeMap;
 use core::arch::asm;
 use lazy_static::*;
 
 use riscv::register::satp;
 
 use crate::{
-    mem_layout::{KERNEL_BASE, PAGE_SIZE, PHYS_TOP, TRAMPOLINE},
+    mem_layout::{KERNEL_BASE, KERNEL_STACK_SIZE, PAGE_SIZE, PHYS_TOP, TRAMPOLINE},
     sync::UPSafeCell,
     task::param::MAX_APP_NUM,
 };
@@ -12,7 +13,7 @@ use crate::{
 use super::{
     address::Addr,
     kernel_stack_i,
-    page_allocator::kalloc,
+    page_allocator::{kalloc, PageTracker},
     page_table::{PTEFlags, PageTable},
 };
 
@@ -23,23 +24,30 @@ extern "C" {
 
 struct KernelSpace {
     page_table: PageTable,
+    data_pages: BTreeMap<Addr, PageTracker>,
 }
 
 impl KernelSpace {
     pub fn new() -> Self {
         Self {
             page_table: PageTable::new(),
+            data_pages: BTreeMap::new(),
         }
     }
 
     // 为每一个应用程序分配一个内核栈
     fn alloc_kernel_stack(&mut self) {
         for i in 0..MAX_APP_NUM {
-            let page_tracker = kalloc().unwrap();
-            let pa: Addr = page_tracker.page().into();
-            self.page_table.push_page(page_tracker);
-            self.page_table
-                .map_range(kernel_stack_i(i), pa, PAGE_SIZE, PTEFlags::R | PTEFlags::W);
+            let mut a = 0usize;
+            while (a < KERNEL_STACK_SIZE) {
+                let page_tracker = kalloc().unwrap();
+                let pa: Addr = page_tracker.page().into();
+                self.data_pages.insert(pa, page_tracker);
+
+                self.page_table
+                    .map(kernel_stack_i(i).add(a), pa, PTEFlags::R | PTEFlags::W);
+                a += PAGE_SIZE;
+            }
         }
     }
 
@@ -58,10 +66,9 @@ impl KernelSpace {
             PTEFlags::R | PTEFlags::W,
         );
 
-        self.page_table.map_range(
+        self.page_table.map(
             Addr::new(TRAMPOLINE),
             Addr::new(trampoline as usize),
-            PAGE_SIZE,
             PTEFlags::R | PTEFlags::X,
         );
 

@@ -1,8 +1,8 @@
-use crate::mem_layout::{PAGE_SIZE, TRAMPOLINE};
+use crate::mem_layout::{KERNEL_STACK_SIZE, PAGE_SIZE, TRAMPOLINE};
 
 use self::address::Addr;
 
-mod address;
+pub mod address;
 mod kernel_heap;
 mod kernel_space;
 mod page_allocator;
@@ -10,7 +10,7 @@ mod page_table;
 pub mod user_space;
 
 pub fn kernel_stack_i(id: usize) -> Addr {
-    Addr::new(TRAMPOLINE - 2 * (id + 1) * PAGE_SIZE)
+    Addr::new(TRAMPOLINE - (id + 1) * (KERNEL_STACK_SIZE + PAGE_SIZE))
 }
 
 pub fn init() {
