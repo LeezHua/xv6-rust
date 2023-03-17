@@ -20,9 +20,9 @@ struct KernelSpace {
 }
 
 impl KernelSpace {
-    pub fn empty() -> Self {
+    pub fn new() -> Self {
         Self {
-            page_table: PageTable::empty(),
+            page_table: PageTable::new(),
         }
     }
     pub fn init(&mut self) {
@@ -57,12 +57,12 @@ impl KernelSpace {
 
 lazy_static! {
     static ref KERNEL_SPACE: UPSafeCell<KernelSpace> =
-        unsafe { UPSafeCell::new(KernelSpace::empty()) };
+        unsafe { UPSafeCell::new(KernelSpace::new()) };
 }
 
 pub fn kvminit() {
     let mut kernel_space = KERNEL_SPACE.get_mut();
     kernel_space.init();
     kernel_space.active();
-    kernel_space.space_test();
+    // kernel_space.space_test();
 }

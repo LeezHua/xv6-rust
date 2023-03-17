@@ -4,6 +4,7 @@ mod kernel_space;
 mod page_allocator;
 mod page_table;
 pub mod param;
+pub mod user_space;
 
 pub fn init() {
     kernel_heap::init_heap();
@@ -12,6 +13,8 @@ pub fn init() {
     page_allocator::kinit();
     page_allocator::page_allocator_test();
     kernel_space::kvminit();
+
+    user_space::userspace_test();
 
     println!("memory init success!");
 }

@@ -20,6 +20,6 @@ pub const MAX_PPN: usize = (1 << PPN_WIDTH_SV39) - 1;
 pub const MAX_VPN: usize = (1 << VPN_WIDTH_SV39) - 1;
 
 pub const KERNEL_BASE: usize = 0x8020_0000;
-pub const PHYS_TOP: usize = 0x8080_0000;
+pub const PHYS_TOP: usize = 0x8800_0000;
 pub const TRAMPOLINE: usize = MAX_VIRT_SIZE - PAGE_SIZE;
 pub const TRAP_FRAME: usize = TRAMPOLINE - PAGE_SIZE;

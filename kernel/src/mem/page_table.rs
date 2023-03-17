@@ -5,7 +5,7 @@ use rand::{rngs::SmallRng, Rng, SeedableRng};
 
 use crate::mem::{
     address::Page,
-    param::{MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN},
+    param::{KERNEL_BASE, MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN, PHYS_TOP},
 };
 
 use super::{
@@ -81,7 +81,7 @@ pub struct PageTable {
 }
 
 impl PageTable {
-    pub fn empty() -> Self {
+    pub fn new() -> Self {
         let page_tracker = kalloc().unwrap();
         let page = page_tracker.page();
         page.clean_page();
@@ -91,8 +91,13 @@ impl PageTable {
         Self { root, pages }
     }
 
+    pub fn push_page(&mut self, page_tracker: PageTracker) {
+        self.pages
+            .insert(Addr::new(page_tracker.page().addr), page_tracker);
+    }
+
     // 释放一个页面
-    pub fn remove_tracker(&mut self, addr: Addr) {
+    pub fn remove_page(&mut self, addr: Addr) {
         self.pages.remove(&addr);
     }
 
@@ -139,6 +144,7 @@ impl PageTable {
                     break; // 内存不足
                 }
             }
+            let pre = page;
             page = Page::new(pte.get_addr_bits());
         }
         res
@@ -149,7 +155,7 @@ impl PageTable {
         assert!(va.bits <= MAX_VIRT_ADDR);
 
         if let Some(pte) = self.walk(va) {
-            if !pte.valid() {
+            if !pte.valid() || !pte.user() {
                 None
             } else {
                 Some(Addr::new(pte.get_addr_bits()))
@@ -163,11 +169,13 @@ impl PageTable {
     fn map(&mut self, va: Addr, pa: Addr, flags: PTEFlags) {
         assert!(va.bits <= MAX_VIRT_ADDR);
         assert!(pa.bits <= MAX_PHYS_ADDR);
-        // println!("map: va: {:?}, pa: {:?}", va, pa);
-
         let pte = self.walk_alloc(va).unwrap();
         assert!(!pte.valid(), "{:?} has been mapped", *pte);
         *pte = PageTableEntry::new(pa, flags | PTEFlags::V);
+    }
+
+    pub fn contain(&self, key: Addr) -> bool {
+        self.pages.contains_key(&key)
     }
 
     // 映射一段连续的页面
@@ -199,7 +207,7 @@ impl PageTable {
             }
             println!(
                 "  ..pte: {:?}, pa: {:?}",
-                Addr::new(page.addr + i * 8),
+                *pte,
                 Addr::new(pte.get_addr_bits())
             );
             page = Page::new(pte.get_addr_bits());
@@ -209,7 +217,7 @@ impl PageTable {
                 }
                 println!(
                     "    ..pte: {:?}, pa: {:?}",
-                    Addr::new(page.addr + i * 8),
+                    *pte,
                     Addr::new(pte.get_addr_bits())
                 );
                 page = Page::new(pte.get_addr_bits());
@@ -219,7 +227,7 @@ impl PageTable {
                     }
                     println!(
                         "      ..pte: {:?}, pa: {:?}",
-                        Addr::new(page.addr + i * 8),
+                        *pte,
                         Addr::new(pte.get_addr_bits())
                     );
                 }

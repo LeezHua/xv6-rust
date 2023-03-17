@@ -7,6 +7,7 @@ use super::{
 
 // 地址结构
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]
+#[repr(C)]
 pub struct Addr {
     pub bits: usize,
 }
@@ -82,6 +83,7 @@ impl Addr {
 
 // 页面结构
 #[derive(Clone, Copy)]
+#[repr(C)]
 pub struct Page {
     pub addr: usize,
 }
@@ -127,7 +129,7 @@ impl Page {
     }
     pub fn get_ptes_mut(&self) -> &'static mut [PageTableEntry] {
         let src = self.addr as *mut PageTableEntry;
-        unsafe { core::slice::from_raw_parts_mut(src, PAGE_SIZE) }
+        unsafe { core::slice::from_raw_parts_mut(src, PTE_NUM_PER_PAGE) }
     }
 }
 

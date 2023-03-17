@@ -48,7 +48,7 @@ _app_num:
 	.global app{0}_start
 	.global app{0}_end
 app{0}_start:
-	.incbin \"{2}{1}.bin\"
+	.incbin \"{2}{1}\"
 app{0}_end:",
             i, apps[i], TARGET_PATH
         )
