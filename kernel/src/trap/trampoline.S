@@ -6,6 +6,9 @@
 	ld x\n, \n*8(a0)
 .endm
 
+.equ TRAPFRAME, 0x3FFFFFE000
+
+
 	.section .text
 	.global trampoline
 trampoline:
@@ -14,9 +17,13 @@ trampoline:
 	.global user_return
 user_trap:
 
-	// before this, sscratch: TRAMFRAME
-	csrrw a0, sscratch, a0
-	// now a0: TRAMFRAME
+	// save user a0 in sscratch
+	csrw sscratch, a0
+	
+	# each process has a separate p->trapframe memory area,
+    # but it's mapped to the same virtual address
+    # (TRAPFRAME) in every process's user page table.
+	li a0, TRAPFRAME
 	
 	# save general-purpose registers
 	.set n, 1
@@ -51,17 +58,16 @@ user_trap:
 	jr t1
 
 user_return:
-	# user_return(TRAPFRAME, pagetable) called by user_trap_return()
+	# user_return(pagetable) called by user_trap_return()
 	# switch from kernel to user
-	# a0: TRAPFRAME, a1: user page table, for satp.
+	# a0: user page table, for satp.
 	
 	# switch to the user page table
 	sfence.vma zero, zero
-	csrw satp, a1
+	csrw satp, a0
 	sfence.vma zero, zero
 
-	# save TRAPFRAME in sscratch
-	csrw sscratch, a0
+	li a0, TRAPFRAME
 
 	# restore all general-perpose registers but a0 from TRAPFRAME
 	.set n, 1

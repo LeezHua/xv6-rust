@@ -3,25 +3,24 @@ use riscv::register::sstatus::Sstatus;
 #[repr(C)]
 pub struct TrapContext {
     pub x: [usize; 32],
-    pub sepc: usize,
+    kernel_satp: usize, // kernel page table
+    kernel_sp: usize,   // top of process's kernel stack
+    kernel_trap: usize, // user_trap_hanbler()
+    pub epc: usize,     // saved user program counter
 }
 
 impl TrapContext {
-    pub fn new() -> Self {
+    pub fn new(kernel_satp: usize, kernel_sp: usize, kernel_trap: usize) -> Self {
         Self {
             x: [0; 32],
-            sepc: 0,
+            kernel_satp,
+            kernel_sp,
+            kernel_trap,
+            epc: 0,
         }
     }
 
-    pub fn w_sp(&mut self, sp: usize) {
+    pub fn set_sp(&mut self, sp: usize) {
         self.x[2] = sp;
-    }
-
-    pub fn app_init_context(entry: usize, sp: usize) -> Self {
-        let mut cx = TrapContext::new();
-        cx.w_sp(sp);
-        cx.sepc = entry;
-        cx
     }
 }

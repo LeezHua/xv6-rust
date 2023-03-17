@@ -1,9 +1,11 @@
+use crate::mem::user_space::UserSpace;
+
 use super::TaskContext;
 
-#[derive(Clone, Copy)]
 pub struct TaskControlBlock {
     pub status: TaskStatus,
     pub context: TaskContext,
+    pub space: UserSpace,
 }
 
 impl TaskControlBlock {
@@ -11,6 +13,7 @@ impl TaskControlBlock {
         Self {
             status: TaskStatus::Unused,
             context: TaskContext::new(),
+            space: UserSpace::new(),
         }
     }
 }
@@ -23,11 +26,4 @@ pub enum TaskStatus {
     Runable,
     Running,
     Zombie,
-}
-
-// action to transfer status of task
-#[derive(PartialEq)]
-pub enum TaskOption {
-    Suspend,
-    Kill,
 }

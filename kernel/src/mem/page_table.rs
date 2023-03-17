@@ -1,5 +1,7 @@
 use crate::mem::address::Page;
-use crate::mem_layout::{MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN, PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS};
+use crate::mem_layout::{
+    MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN, PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS,
+};
 use alloc::collections::BTreeMap;
 use bitflags::*;
 use core::fmt::{self, Debug, Formatter};
@@ -201,28 +203,20 @@ impl PageTable {
             if !pte.valid() {
                 continue;
             }
-            println!(
-                "  ..pte: {:?}, pa: {:?}",
-                *pte,
-                Addr::new(pte.get_addr_bits())
-            );
+            println!("  ..{:?}, pa: {:?}", *pte, Addr::new(pte.get_addr_bits()));
             page = Page::new(pte.get_addr_bits());
             for (i, pte) in page.get_ptes().into_iter().enumerate() {
                 if !pte.valid() {
                     continue;
                 }
-                println!(
-                    "    ..pte: {:?}, pa: {:?}",
-                    *pte,
-                    Addr::new(pte.get_addr_bits())
-                );
+                println!("    ..{:?}, pa: {:?}", *pte, Addr::new(pte.get_addr_bits()));
                 page = Page::new(pte.get_addr_bits());
                 for (i, pte) in page.get_ptes().into_iter().enumerate() {
                     if !pte.valid() {
                         continue;
                     }
                     println!(
-                        "      ..pte: {:?}, pa: {:?}",
+                        "      ..{:?}, pa: {:?}",
                         *pte,
                         Addr::new(pte.get_addr_bits())
                     );

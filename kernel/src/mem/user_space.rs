@@ -2,7 +2,7 @@ use core::usize::MIN;
 
 use crate::{
     mem::{address::Addr, page_table::PTEFlags},
-    mem_layout::PAGE_SIZE,
+    mem_layout::{PAGE_SIZE, TRAMPOLINE, TRAP_FRAME},
     sync::UPSafeCell,
 };
 use lazy_static::*;
@@ -48,13 +48,34 @@ impl UserSpace {
     }
 
     // 映射 trampoline 和 trampframe
-    fn init(&self) {
-        // todo!()
+    pub fn init_pagetable(&mut self) {
+        extern "C" {
+            fn trampoline();
+        }
+
+        // 映射 trampoline
+        self.page_table.map_range(
+            Addr::new(TRAMPOLINE),
+            Addr::new(trampoline as usize),
+            PAGE_SIZE,
+            PTEFlags::R | PTEFlags::X,
+        );
+
+        // 为 trapframe 分配内存
+        let page_tracker = kalloc().unwrap();
+        let pa: Addr = page_tracker.page().into();
+        self.page_table.push_page(page_tracker);
+
+        // 映射 trapframe
+        self.page_table.map_range(
+            Addr::new(TRAP_FRAME),
+            pa,
+            PAGE_SIZE,
+            PTEFlags::R | PTEFlags::W,
+        );
     }
 
-    pub fn elf_init(&mut self, elf_data: &[u8]) {
-        self.init();
-
+    pub fn init_from_elf(&mut self, elf_data: &[u8]) {
         let elf = xmas_elf::ElfFile::new(elf_data).unwrap();
         let elf_header = elf.header;
         let magic = elf_header.pt1.magic;
@@ -87,7 +108,7 @@ impl UserSpace {
             }
         }
     }
-    pub fn print_user_page_table(&self) {
+    pub fn print_user_pagetable(&self) {
         self.page_table.print_page_table();
     }
 }
@@ -105,7 +126,8 @@ pub fn userspace_test() {
     };
 
     let mut user = UserSpace::new();
-    user.elf_init(app0);
-    user.print_user_page_table();
+    user.init_pagetable();
+    user.init_from_elf(app0);
+    user.print_user_pagetable();
     println!("user space test success!");
 }

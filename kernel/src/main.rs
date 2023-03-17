@@ -15,6 +15,7 @@ mod lang_items;
 mod logo;
 mod mem;
 pub mod mem_layout;
+mod proc;
 mod sbi;
 mod sync;
 pub mod syscall;
@@ -34,7 +35,6 @@ pub fn main() {
     logo::print_logo();
     trap::init();
     mem::init();
-
     shutdown()
 }
 

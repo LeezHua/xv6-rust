@@ -1,7 +1,9 @@
 use core::fmt::{self, Debug, Formatter};
 
 use super::page_table::PageTableEntry;
-use crate::mem_layout::{PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS, PTE_NUM_PER_PAGE, PTE_NUM_PER_PAGE_BITS};
+use crate::mem_layout::{
+    PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS, PTE_NUM_PER_PAGE, PTE_NUM_PER_PAGE_BITS,
+};
 
 // 地址结构
 #[derive(Clone, Copy, PartialEq, Eq, PartialOrd, Ord)]

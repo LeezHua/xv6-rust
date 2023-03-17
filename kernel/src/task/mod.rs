@@ -9,9 +9,9 @@ use crate::{
 
 use self::{
     context::TaskContext,
-    loader::{get_app_num, init_app_context},
+    loader::get_app_num,
     param::MAX_APP_NUM,
-    task::{TaskControlBlock, TaskOption, TaskStatus},
+    task::{TaskControlBlock, TaskStatus},
 };
 
 global_asm!(include_str!("switch.S"));
@@ -19,7 +19,6 @@ global_asm!(include_str!("switch.S"));
 mod context;
 mod loader;
 pub mod param;
-mod stack;
 #[allow(clippy::module_inception)]
 pub mod task;
 
@@ -41,12 +40,13 @@ lazy_static! {
     pub static ref TASK_MANAGER: TaskManager = TaskManager {
         task_num: get_app_num(),
         inner: UPSafeCell::new({
-            let mut tasks = [TaskControlBlock::new(); MAX_APP_NUM];
-            for (i, task) in tasks.iter_mut().enumerate() {
-                task.status = TaskStatus::Runable;
-                task.context.init(init_app_context(i));
-            }
-            TaskManagerInner { tasks, current: 0 }
+            // let mut tasks = [TaskControlBlock::new(); MAX_APP_NUM];
+            // for (i, task) in tasks.iter_mut().enumerate() {
+            //     task.status = TaskStatus::Runable;
+            //     task.context.init(init_app_context(i));
+            // }
+            // TaskManagerInner { tasks, current: 0 }
+            todo!()
         })
     };
 }
@@ -118,5 +118,3 @@ pub fn run_next_task_suspend() {
     TASK_MANAGER.mark_current_runnable();
     TASK_MANAGER.run_next_task();
 }
-
-pub use loader::load_apps;

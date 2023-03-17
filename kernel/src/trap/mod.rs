@@ -38,7 +38,7 @@ pub fn user_trap_handler(cx: &mut TrapContext) {
     let stval = stval::read();
     match scause.cause() {
         Trap::Exception(Exception::UserEnvCall) => {
-            cx.sepc += 4;
+            cx.epc += 4;
             cx.x[10] = syscall(cx.x[17], [cx.x[10], cx.x[11], cx.x[12]]) as usize;
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
@@ -64,15 +64,15 @@ pub fn user_trap_handler(cx: &mut TrapContext) {
     }
 }
 
-pub fn user_trap_return() {
+pub fn user_trap_return(user_satp: usize) {
     unsafe {
         sstatus::set_spp(SPP::User);
     }
     extern "C" {
-        fn user_return();
+        fn user_return(user_satp: usize);
     }
     unsafe {
-        user_return();
+        user_return(user_satp);
     }
 }
 
