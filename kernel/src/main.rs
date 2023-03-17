@@ -14,6 +14,7 @@ mod console;
 mod lang_items;
 mod logo;
 mod mem;
+pub mod mem_layout;
 mod sbi;
 mod sync;
 pub mod syscall;

@@ -3,12 +3,14 @@ use lazy_static::*;
 
 use riscv::register::satp;
 
-use crate::sync::UPSafeCell;
+use crate::{
+    mem_layout::{KERNEL_BASE, PHYS_TOP},
+    sync::UPSafeCell,
+};
 
 use super::{
     address::Addr,
     page_table::{PTEFlags, PageTable},
-    param::{KERNEL_BASE, PHYS_TOP},
 };
 
 extern "C" {

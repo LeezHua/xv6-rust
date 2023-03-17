@@ -3,12 +3,10 @@ use core::fmt::{self, Debug, Formatter};
 use core::ptr::null_mut;
 use lazy_static::*;
 
+use crate::mem_layout::{PAGE_SIZE, PHYS_TOP};
 use crate::sync::UPSafeCell;
 
-use super::{
-    address::{Addr, Page},
-    param::{PAGE_SIZE, PHYS_TOP},
-};
+use super::address::{Addr, Page};
 
 // 页面分配器必须实现这个特征
 trait PageAlloc {

@@ -2,11 +2,12 @@ use core::usize::MIN;
 
 use crate::{
     mem::{address::Addr, page_table::PTEFlags},
+    mem_layout::PAGE_SIZE,
     sync::UPSafeCell,
 };
 use lazy_static::*;
 
-use super::{page_allocator::kalloc, page_table::PageTable, param::PAGE_SIZE};
+use super::{page_allocator::kalloc, page_table::PageTable};
 
 pub struct UserSpace {
     page_table: PageTable,

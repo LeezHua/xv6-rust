@@ -3,7 +3,6 @@ mod kernel_heap;
 mod kernel_space;
 mod page_allocator;
 mod page_table;
-pub mod param;
 pub mod user_space;
 
 pub fn init() {

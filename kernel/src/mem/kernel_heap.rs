@@ -1,4 +1,4 @@
-use super::param::KERNEL_HEAP_SIZE;
+use crate::mem_layout::KERNEL_HEAP_SIZE;
 use buddy_system_allocator::LockedHeap;
 
 extern crate alloc;

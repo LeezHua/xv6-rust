@@ -15,7 +15,7 @@ use crate::{
 
 pub mod context;
 mod interrupt;
-global_asm!(include_str!("trap.S"));
+global_asm!(include_str!("trampoline.S"));
 
 pub fn init() {
     extern "C" {

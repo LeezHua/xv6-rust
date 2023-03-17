@@ -1,17 +1,13 @@
+use crate::mem::address::Page;
+use crate::mem_layout::{MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN, PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS};
 use alloc::collections::BTreeMap;
 use bitflags::*;
 use core::fmt::{self, Debug, Formatter};
 use rand::{rngs::SmallRng, Rng, SeedableRng};
 
-use crate::mem::{
-    address::Page,
-    param::{KERNEL_BASE, MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN, PHYS_TOP},
-};
-
 use super::{
     address::Addr,
     page_allocator::{kalloc, PageTracker},
-    param::{PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS},
 };
 
 bitflags! {
