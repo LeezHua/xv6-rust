@@ -79,6 +79,21 @@ pub struct PageTable {
 }
 
 impl PageTable {
+    pub fn empty() -> Self {
+        Self {
+            root: Addr::empty(),
+            tables: Vec::new(),
+        }
+    }
+    // 调用 empty() 后必须使用此方法初始化
+    pub fn init(&mut self) {
+        let page_tracker = kalloc().unwrap();
+        let page = page_tracker.page();
+        page.clean_page();
+        self.root = page.into();
+        self.tables.push(page_tracker);
+    }
+
     pub fn new() -> Self {
         let page_tracker = kalloc().unwrap();
         let page = page_tracker.page();

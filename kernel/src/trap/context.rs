@@ -1,6 +1,7 @@
 use riscv::register::sstatus::Sstatus;
 
 #[repr(C)]
+#[derive(Clone, Copy)]
 pub struct TrapContext {
     pub x: [usize; 32],
     kernel_satp: usize, // kernel page table
@@ -22,5 +23,27 @@ impl TrapContext {
 
     pub fn set_sp(&mut self, sp: usize) {
         self.x[2] = sp;
+    }
+
+    pub fn set_epc(&mut self, epc: usize) {
+        self.epc = epc;
+    }
+
+    pub fn app_init_context(
+        entry: usize,
+        sp: usize,
+        kernel_satp: usize,
+        kernel_sp: usize,
+        kernel_trap: usize,
+    ) -> Self {
+        let mut x = [0usize; 32];
+        x[2] = sp;
+        Self {
+            x,
+            kernel_satp,
+            kernel_sp,
+            kernel_trap,
+            epc: entry,
+        }
     }
 }

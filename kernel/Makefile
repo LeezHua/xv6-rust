@@ -46,7 +46,10 @@ qemu-gdb : kernel-bin
     -nographic \
     -bios $(BOOTLOADER) \
     -device loader,file=$(KERNEL_BIN),addr=$(KERNEL_ENTRY_PA) \
-    -s -S
+    -S -gdb tcp::26000
+
+gdb :
+	gdb-multiarch -ex 'file $(KERNEL_ELF)' -ex 'set arch riscv:rv64' -ex 'target remote localhost:26000'
 
 clean: user-clean
 	cargo clean

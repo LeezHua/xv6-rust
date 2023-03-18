@@ -15,7 +15,6 @@ mod lang_items;
 mod logo;
 mod mem;
 pub mod mem_layout;
-mod proc;
 mod sbi;
 mod sync;
 pub mod syscall;
@@ -25,6 +24,7 @@ mod trap;
 use core::arch::global_asm;
 
 use sbi::shutdown;
+use task::run_first_task;
 
 global_asm!(include_str!("entry.S"));
 global_asm!(include_str!("link_app.S"));
@@ -35,6 +35,8 @@ pub fn main() {
     logo::print_logo();
     trap::init();
     mem::init();
+    task::load_tasks();
+    run_first_task();
     shutdown()
 }
 

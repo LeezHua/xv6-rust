@@ -1,7 +1,12 @@
-use core::arch::global_asm;
+use crate::{
+    mem_layout::TRAMPOLINE,
+    task::{current_pagetable, current_user_epc},
+};
+use core::arch::{asm, global_asm};
 
 use riscv::register::{
     scause::{self, Exception, Interrupt, Trap},
+    sepc,
     sstatus::{self, SPP},
     stval, stvec,
     utvec::TrapMode,
@@ -9,7 +14,7 @@ use riscv::register::{
 
 use crate::{
     syscall::syscall,
-    task::{run_next_task_kill, run_next_task_suspend},
+    task::{current_user_satp, run_next_task_kill, run_next_task_suspend},
     trap::interrupt::set_next_clock_interrupt,
 };
 
@@ -17,15 +22,21 @@ pub mod context;
 mod interrupt;
 global_asm!(include_str!("trampoline.S"));
 
+extern "C" {
+    fn trampoline();
+    fn user_trap();
+    fn user_return();
+}
+
 pub fn init() {
-    extern "C" {
-        fn user_trap();
-    }
     unsafe {
-        stvec::write(user_trap as usize, TrapMode::Direct);
+        stvec::write(
+            TRAMPOLINE + (user_trap as usize - trampoline as usize),
+            TrapMode::Direct,
+        );
     }
-    interrupt::enable_clock_interrupt();
-    set_next_clock_interrupt();
+    // interrupt::enable_clock_interrupt();
+    // set_next_clock_interrupt();
 }
 
 #[no_mangle]
@@ -34,6 +45,7 @@ pub fn user_trap_handler(cx: &mut TrapContext) {
         panic!("user_trap_handler: not from user mode");
     }
 
+    cx.epc = sepc::read();
     let scause = scause::read();
     let stval = stval::read();
     match scause.cause() {
@@ -64,15 +76,19 @@ pub fn user_trap_handler(cx: &mut TrapContext) {
     }
 }
 
-pub fn user_trap_return(user_satp: usize) {
+pub fn user_trap_return() {
     unsafe {
         sstatus::set_spp(SPP::User);
     }
-    extern "C" {
-        fn user_return(user_satp: usize);
-    }
+    let satp = current_user_satp();
+    sepc::write(current_user_epc());
+
     unsafe {
-        user_return(user_satp);
+        asm! {
+            "jr {0}",
+            in(reg) TRAMPOLINE + (user_return as usize - trampoline as usize),
+            in("a0") satp,
+        }
     }
 }
 

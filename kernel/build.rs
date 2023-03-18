@@ -26,7 +26,7 @@ fn main() {
     writeln!(
         f,
         "
-	.align 3
+	.align 4
 	.section .data
 	.global _app_num
 _app_num:

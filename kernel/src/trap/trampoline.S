@@ -9,12 +9,11 @@
 .equ TRAPFRAME, 0x3FFFFFE000
 
 
-	.section .text
+	.section .text.trampoline
 	.global trampoline
 trampoline:
 	.align 4
 	.global user_trap
-	.global user_return
 user_trap:
 
 	// save user a0 in sscratch
@@ -57,6 +56,7 @@ user_trap:
 	# jump to user_trap_handler(), which doesn't return
 	jr t1
 
+	.global user_return
 user_return:
 	# user_return(pagetable) called by user_trap_return()
 	# switch from kernel to user

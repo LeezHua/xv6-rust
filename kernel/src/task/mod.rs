@@ -1,5 +1,6 @@
 use core::arch::global_asm;
 
+use alloc::vec::Vec;
 use lazy_static::lazy_static;
 
 use crate::{
@@ -9,7 +10,7 @@ use crate::{
 
 use self::{
     context::TaskContext,
-    loader::get_app_num,
+    loader::{get_app_data, get_app_num},
     param::MAX_APP_NUM,
     task::{TaskControlBlock, TaskStatus},
 };
@@ -27,7 +28,7 @@ extern "C" {
 }
 
 pub struct TaskManagerInner {
-    tasks: [TaskControlBlock; MAX_APP_NUM],
+    tasks: Vec<TaskControlBlock>,
     current: usize,
 }
 
@@ -40,18 +41,23 @@ lazy_static! {
     pub static ref TASK_MANAGER: TaskManager = TaskManager {
         task_num: get_app_num(),
         inner: UPSafeCell::new({
-            // let mut tasks = [TaskControlBlock::new(); MAX_APP_NUM];
-            // for (i, task) in tasks.iter_mut().enumerate() {
-            //     task.status = TaskStatus::Runable;
-            //     task.context.init(init_app_context(i));
-            // }
-            // TaskManagerInner { tasks, current: 0 }
-            todo!()
+            let tasks: Vec<TaskControlBlock> =
+                (0..MAX_APP_NUM).map(|_| TaskControlBlock::new()).collect();
+            TaskManagerInner { tasks, current: 0 }
         })
     };
 }
 
 impl TaskManager {
+    fn load_tasks(&self) {
+        let mut inner = self.inner.get_mut();
+        let tasks = &mut inner.tasks;
+
+        for id in 0..self.task_num {
+            tasks[id].init_from_elf(get_app_data(id), id);
+        }
+    }
+
     fn run_first_task(&self) -> ! {
         let mut inner = self.inner.get_mut();
         let current = inner.current;
@@ -59,6 +65,8 @@ impl TaskManager {
         let mut zero = TaskContext::new();
         let first_cx = &mut inner.tasks[current].context as *const TaskContext;
         drop(inner);
+
+        println!("[kernle] task{} running.", current);
         unsafe {
             switch(&mut zero as *mut TaskContext, first_cx);
         }
@@ -95,6 +103,7 @@ impl TaskManager {
             let new_cx = &inner.tasks[next].context as *const TaskContext;
 
             drop(inner);
+            println!("[kernel] task{} running", current);
             unsafe {
                 switch(old_cx, new_cx);
             }
@@ -103,6 +112,28 @@ impl TaskManager {
             QEMU_EXIT_HANDLE.exit_success();
         }
     }
+
+    fn current_user_satp(&self) -> usize {
+        let inner = self.inner.get_mut();
+        let current = inner.current;
+        inner.tasks[current].user_satp()
+    }
+
+    fn current_user_epc(&self) -> usize {
+        let inner = self.inner.get_mut();
+        let current = inner.current;
+        inner.tasks[current].user_epc()
+    }
+
+    fn current_pagetable(&self) {
+        let inner = self.inner.get_mut();
+        let current = inner.current;
+        inner.tasks[current].space.print_user_pagetable();
+    }
+}
+
+pub fn load_tasks() {
+    TASK_MANAGER.load_tasks();
 }
 
 pub fn run_first_task() {
@@ -117,4 +148,16 @@ pub fn run_next_task_kill() {
 pub fn run_next_task_suspend() {
     TASK_MANAGER.mark_current_runnable();
     TASK_MANAGER.run_next_task();
+}
+
+pub fn current_user_satp() -> usize {
+    TASK_MANAGER.current_user_satp()
+}
+
+pub fn current_user_epc() -> usize {
+    TASK_MANAGER.current_user_epc()
+}
+
+pub fn current_pagetable() {
+    TASK_MANAGER.current_pagetable();
 }

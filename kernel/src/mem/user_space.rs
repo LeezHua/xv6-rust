@@ -20,9 +20,9 @@ pub struct UserSpace {
 }
 
 impl UserSpace {
-    pub fn new() -> Self {
+    pub fn empty() -> Self {
         Self {
-            page_table: PageTable::new(),
+            page_table: PageTable::empty(),
             data_pages: BTreeMap::new(),
             size: 0,
         }
@@ -57,6 +57,7 @@ impl UserSpace {
         extern "C" {
             fn trampoline();
         }
+        self.page_table.init();
 
         // 映射 trampoline
         self.page_table.map(
@@ -69,6 +70,7 @@ impl UserSpace {
         let page_tracker = kalloc().unwrap();
         let pa: Addr = page_tracker.page().into();
         self.data_pages.insert(pa, page_tracker);
+        self.size += PAGE_SIZE;
 
         // 映射 trapframe
         self.page_table
@@ -78,18 +80,18 @@ impl UserSpace {
         pa
     }
 
-    fn init_stack(&mut self, va: Addr) -> Addr {
+    fn init_stack(&mut self, va: Addr) {
         let mut a = 0usize;
         while (a < USER_STACK_SIZE) {
             let page_tracker = kalloc().unwrap();
             let pa: Addr = page_tracker.page().into();
             self.data_pages.insert(pa, page_tracker);
+            self.size += PAGE_SIZE;
 
             self.page_table
                 .map(va.add(a), pa, PTEFlags::R | PTEFlags::W | PTEFlags::U);
             a += PAGE_SIZE;
         }
-        self.page_table.walk_addr(va).unwrap()
     }
 
     pub fn init_from_elf(&mut self, elf_data: &[u8]) -> (Addr, Addr) {
@@ -129,12 +131,18 @@ impl UserSpace {
             }
         }
 
-        let stack_bottom = self.init_stack(prog_end.add(PAGE_SIZE));
+        prog_end = prog_end.align_up();
+        self.init_stack(prog_end.add(PAGE_SIZE));
+        let stack_top = prog_end.add(USER_STACK_SIZE + PAGE_SIZE);
 
-        (stack_bottom, trap_frame)
+        (stack_top, trap_frame)
     }
     pub fn print_user_pagetable(&self) {
         self.page_table.print_page_table();
+    }
+
+    pub fn make_satp(&self) -> usize {
+        self.page_table.make_satp()
     }
 }
 
@@ -150,7 +158,7 @@ pub fn userspace_test() {
         core::slice::from_raw_parts(app_start[0] as *const u8, app_start[1] - app_start[0])
     };
 
-    let mut user = UserSpace::new();
+    let mut user = UserSpace::empty();
     user.init_from_elf(app0);
     user.print_user_pagetable();
     println!("user space test success!");

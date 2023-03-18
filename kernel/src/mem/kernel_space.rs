@@ -12,7 +12,6 @@ use crate::{
 
 use super::{
     address::Addr,
-    kernel_stack_i,
     page_allocator::{kalloc, PageTracker},
     page_table::{PTEFlags, PageTable},
 };
@@ -94,9 +93,13 @@ lazy_static! {
         unsafe { UPSafeCell::new(KernelSpace::new()) };
 }
 
+pub fn kernel_stack_i(id: usize) -> Addr {
+    Addr::new(TRAMPOLINE - (id + 1) * (KERNEL_STACK_SIZE + PAGE_SIZE))
+}
+
 pub fn kvminit() {
     let mut kernel_space = KERNEL_SPACE.get_mut();
     kernel_space.init();
     kernel_space.active();
-    println!("kvminit success");
+    println!("[kernel] kernel space init success.");
 }
