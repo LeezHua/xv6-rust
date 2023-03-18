@@ -2,6 +2,7 @@ use crate::{
     mem::{
         address::{Addr, Page},
         kernel_sp_i,
+        kernel_space::KERNEL_SPACE,
         user_space::UserSpace,
     },
     trap::{user_trap_handler, TrapContext},
@@ -37,7 +38,7 @@ impl TaskControlBlock {
         *tf_ptr = TrapContext::app_init_context(
             APP_BASE_ADDRESS,
             sp.bits,
-            self.space.make_satp(),
+            KERNEL_SPACE.get_mut().make_satp(),
             kernel_sp_i(id),
             user_trap_handler as usize,
         );
@@ -58,6 +59,10 @@ impl TaskControlBlock {
     pub fn user_epc(&self) -> usize {
         let tf_ptr = self.trapframe.get_value::<TrapContext>();
         tf_ptr.epc
+    }
+
+    pub fn trap_context(&self) -> &'static mut TrapContext {
+        self.trapframe.get_value_mut()
     }
 }
 

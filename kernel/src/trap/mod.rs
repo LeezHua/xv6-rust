@@ -1,6 +1,6 @@
 use crate::{
     mem_layout::TRAMPOLINE,
-    task::{current_pagetable, current_user_epc},
+    task::{current_pagetable, current_user_epc, current_user_trapcontext},
 };
 use core::arch::{asm, global_asm};
 
@@ -29,21 +29,34 @@ extern "C" {
 }
 
 pub fn init() {
+    set_user_trap();
+    interrupt::enable_clock_interrupt();
+    set_next_clock_interrupt();
+}
+
+pub fn set_user_trap() {
     unsafe {
         stvec::write(
             TRAMPOLINE + (user_trap as usize - trampoline as usize),
             TrapMode::Direct,
         );
     }
-    // interrupt::enable_clock_interrupt();
-    // set_next_clock_interrupt();
+}
+
+pub fn set_kernel_trap() {
+    unsafe {
+        stvec::write(kernel_trap as usize, TrapMode::Direct);
+    }
 }
 
 #[no_mangle]
-pub fn user_trap_handler(cx: &mut TrapContext) {
+pub fn user_trap_handler() {
+    set_kernel_trap();
+
     if sstatus::read().spp() != SPP::User {
         panic!("user_trap_handler: not from user mode");
     }
+    let cx = current_user_trapcontext();
 
     cx.epc = sepc::read();
     let scause = scause::read();
@@ -51,7 +64,8 @@ pub fn user_trap_handler(cx: &mut TrapContext) {
     match scause.cause() {
         Trap::Exception(Exception::UserEnvCall) => {
             cx.epc += 4;
-            cx.x[10] = syscall(cx.x[17], [cx.x[10], cx.x[11], cx.x[12]]) as usize;
+            let res = syscall(cx.x[17], [cx.x[10], cx.x[11], cx.x[12]]) as usize;
+            cx.x[10] = res;
         }
         Trap::Exception(Exception::StoreFault) | Trap::Exception(Exception::StorePageFault) => {
             println!("[kernel] PageFault in application, kernel killed it.");
@@ -74,6 +88,8 @@ pub fn user_trap_handler(cx: &mut TrapContext) {
             );
         }
     }
+
+    user_trap_return()
 }
 
 pub fn user_trap_return() {
@@ -82,6 +98,7 @@ pub fn user_trap_return() {
     }
     let satp = current_user_satp();
     sepc::write(current_user_epc());
+    set_user_trap();
 
     unsafe {
         asm! {
@@ -95,3 +112,8 @@ pub fn user_trap_return() {
 pub use context::TrapContext;
 
 use self::interrupt::{enable_clock_interrupt, unable_clock_interrupt};
+
+#[no_mangle]
+pub fn kernel_trap() -> ! {
+    panic!("kernel trap!");
+}

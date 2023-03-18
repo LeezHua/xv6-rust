@@ -5,7 +5,7 @@ use crate::{
     mem_layout::{PAGE_SIZE, TRAMPOLINE, TRAP_FRAME, USER_STACK_SIZE},
     sync::UPSafeCell,
 };
-use alloc::collections::BTreeMap;
+use alloc::{collections::BTreeMap, string::String};
 use lazy_static::*;
 
 use super::{

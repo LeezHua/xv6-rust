@@ -2,6 +2,7 @@ use crate::mem::address::Page;
 use crate::mem_layout::{
     MAX_PHYS_ADDR, MAX_VIRT_ADDR, MAX_VPN, PAGE_BITS, PAGE_SIZE, PTE_FLAGS_BITS,
 };
+use alloc::string::String;
 use alloc::vec::Vec;
 use bitflags::*;
 use core::fmt::{self, Debug, Formatter};
@@ -161,7 +162,7 @@ impl PageTable {
             if !pte.valid() || !pte.user() {
                 None
             } else {
-                Some(Addr::new(pte.get_addr_bits()))
+                Some(Addr::new(pte.get_addr_bits() | (va.bits & (PAGE_SIZE - 1))))
             }
         } else {
             None
@@ -238,4 +239,15 @@ impl PageTable {
             println!("walk va: {:?} -> pa: {:?}", va, pa);
         }
     }
+}
+
+pub fn copy_from_user(page_table: Addr, src: Addr, len: usize) -> &'static [u8] {
+    let page_table = PageTable {
+        root: page_table,
+        tables: Vec::new(),
+    };
+
+    let pa = page_table.walk_addr(src).unwrap();
+
+    unsafe { core::slice::from_raw_parts(pa.bits as *const u8, len) }
 }

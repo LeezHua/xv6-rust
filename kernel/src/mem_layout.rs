@@ -28,3 +28,5 @@ pub const KERNEL_BASE: usize = 0x8020_0000;
 pub const PHYS_TOP: usize = 0x8800_0000;
 pub const TRAMPOLINE: usize = MAX_VIRT_SIZE - PAGE_SIZE;
 pub const TRAP_FRAME: usize = TRAMPOLINE - PAGE_SIZE;
+
+pub const MAX_BUF_SIZE: usize = 1024;

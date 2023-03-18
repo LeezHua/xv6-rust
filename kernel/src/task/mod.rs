@@ -6,6 +6,7 @@ use lazy_static::lazy_static;
 use crate::{
     board::{QEMUExit, QEMU_EXIT_HANDLE},
     sync::UPSafeCell,
+    trap::TrapContext,
 };
 
 use self::{
@@ -103,7 +104,7 @@ impl TaskManager {
             let new_cx = &inner.tasks[next].context as *const TaskContext;
 
             drop(inner);
-            println!("[kernel] task{} running", current);
+            println!("[kernel] task{} running", next);
             unsafe {
                 switch(old_cx, new_cx);
             }
@@ -129,6 +130,12 @@ impl TaskManager {
         let inner = self.inner.get_mut();
         let current = inner.current;
         inner.tasks[current].space.print_user_pagetable();
+    }
+
+    fn current_user_trapcontex(&self) -> &'static mut TrapContext {
+        let inner = self.inner.get_mut();
+        let current = inner.current;
+        inner.tasks[current].trap_context()
     }
 }
 
@@ -160,4 +167,8 @@ pub fn current_user_epc() -> usize {
 
 pub fn current_pagetable() {
     TASK_MANAGER.current_pagetable();
+}
+
+pub fn current_user_trapcontext() -> &'static mut TrapContext {
+    TASK_MANAGER.current_user_trapcontex()
 }

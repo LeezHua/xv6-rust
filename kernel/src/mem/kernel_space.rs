@@ -21,7 +21,7 @@ extern "C" {
     fn trampoline();
 }
 
-struct KernelSpace {
+pub struct KernelSpace {
     page_table: PageTable,
     data_pages: BTreeMap<Addr, PageTracker>,
 }
@@ -83,13 +83,18 @@ impl KernelSpace {
             asm!("sfence.vma");
         }
     }
+
+    pub fn make_satp(&self) -> usize {
+        self.page_table.make_satp()
+    }
+
     pub fn space_test(&self) {
         self.page_table.walk_test();
     }
 }
 
 lazy_static! {
-    static ref KERNEL_SPACE: UPSafeCell<KernelSpace> =
+    pub static ref KERNEL_SPACE: UPSafeCell<KernelSpace> =
         unsafe { UPSafeCell::new(KernelSpace::new()) };
 }
 

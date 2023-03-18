@@ -4,7 +4,7 @@ use self::{address::Addr, kernel_space::kernel_stack_i};
 
 pub mod address;
 mod kernel_heap;
-mod kernel_space;
+pub mod kernel_space;
 mod page_allocator;
 mod page_table;
 pub mod user_space;
@@ -12,6 +12,8 @@ pub mod user_space;
 pub fn kernel_sp_i(id: usize) -> usize {
     kernel_stack_i(id).bits + KERNEL_STACK_SIZE
 }
+
+pub use page_table::copy_from_user;
 
 pub fn init() {
     kernel_heap::init_heap();

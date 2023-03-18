@@ -29,6 +29,17 @@ impl<T> Into<*mut T> for Addr {
     }
 }
 
+impl<T> From<*const T> for Addr {
+    fn from(ptr: *const T) -> Self {
+        Self { bits: ptr as usize }
+    }
+}
+impl<T> Into<*const T> for Addr {
+    fn into(self) -> *const T {
+        self.bits as *const T
+    }
+}
+
 impl Addr {
     pub fn empty() -> Self {
         Addr { bits: 0 }
