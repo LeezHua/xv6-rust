@@ -3,7 +3,7 @@
     <head>
         <!-- Book generated using mdBook -->
         <meta charset="UTF-8">
-        <title>简介 - xv6-rust</title>
+        <title>参考资料 - xv6-rust</title>
         <!-- Custom HTML head -->
         <meta name="description" content="">
         <meta name="viewport" content="width=device-width, initial-scale=1">
@@ -74,7 +74,7 @@
 
         <nav id="sidebar" class="sidebar" aria-label="Table of contents">
             <div class="sidebar-scrollbox">
-                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html" class="active">简介</a></li><li class="spacer"></li><li class="chapter-item expanded "><a href="guide/index.html"><strong aria-hidden="true">1.</strong> 用户指南</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guide/environment.html"><strong aria-hidden="true">1.1.</strong> 环境配置</a></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="doc/index.html"><strong aria-hidden="true">2.</strong> 开发文档</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">2.1.</strong> 内存管理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.2.</strong> 进程管理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.3.</strong> 文件系统</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.4.</strong> 设备管理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.5.</strong> 异常处理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.6.</strong> 并发处理</div></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="log/index.html"><strong aria-hidden="true">3.</strong> 开发日志</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="log/2023-3.html"><strong aria-hidden="true">3.1.</strong> 2023-3</a></li><li class="chapter-item expanded "><a href="log/2023-2.html"><strong aria-hidden="true">3.2.</strong> 2023-2</a></li><li class="chapter-item expanded "><a href="log/2023-1.html"><strong aria-hidden="true">3.3.</strong> 2023-1</a></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="solution/index.html"><strong aria-hidden="true">4.</strong> 问题与解决</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="solution/memory.html"><strong aria-hidden="true">4.1.</strong> 内存管理</a></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="reference.html">参考资料</a></li></ol>
+                <ol class="chapter"><li class="chapter-item expanded affix "><a href="index.html">简介</a></li><li class="spacer"></li><li class="chapter-item expanded "><a href="guide/index.html"><strong aria-hidden="true">1.</strong> 用户指南</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="guide/environment.html"><strong aria-hidden="true">1.1.</strong> 环境配置</a></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="doc/index.html"><strong aria-hidden="true">2.</strong> 开发文档</a></li><li><ol class="section"><li class="chapter-item expanded "><div><strong aria-hidden="true">2.1.</strong> 内存管理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.2.</strong> 进程管理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.3.</strong> 文件系统</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.4.</strong> 设备管理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.5.</strong> 异常处理</div></li><li class="chapter-item expanded "><div><strong aria-hidden="true">2.6.</strong> 并发处理</div></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="log/index.html"><strong aria-hidden="true">3.</strong> 开发日志</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="log/2023-3.html"><strong aria-hidden="true">3.1.</strong> 2023-3</a></li><li class="chapter-item expanded "><a href="log/2023-2.html"><strong aria-hidden="true">3.2.</strong> 2023-2</a></li><li class="chapter-item expanded "><a href="log/2023-1.html"><strong aria-hidden="true">3.3.</strong> 2023-1</a></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="solution/index.html"><strong aria-hidden="true">4.</strong> 问题与解决</a></li><li><ol class="section"><li class="chapter-item expanded "><a href="solution/memory.html"><strong aria-hidden="true">4.1.</strong> 内存管理</a></li><li class="spacer"></li></ol></li><li class="chapter-item expanded "><a href="reference.html" class="active">参考资料</a></li></ol>
             </div>
             <div id="sidebar-resize-handle" class="sidebar-resize-handle"></div>
         </nav>
@@ -136,48 +136,19 @@
 
                 <div id="content" class="content">
                     <main>
-                        <h1 id="简介"><a class="header" href="#简介">简介</a></h1>
-<p>本项目为使用 Rust 语言重新实现 <a href="https://pdos.csail.mit.edu/6.828/2019/xv6.html">xv6</a>，旨在为使用 Rust 进行操作系统内核开发提供一种思路。本项目支持 QEMU 环境，并且移植了 RustSBI-qemu。</p>
-<h2 id="项目进度"><a class="header" href="#项目进度">项目进度</a></h2>
-<h3 id="2023年1月"><a class="header" href="#2023年1月">2023年1月</a></h3>
+                        <h1 id="参考资料"><a class="header" href="#参考资料">参考资料</a></h1>
 <ul>
-<li><input disabled="" type="checkbox" checked=""/>
-搭建开发环境。</li>
-<li><input disabled="" type="checkbox" checked=""/>
-实现一个去除 std 依赖，基于 RustSBI 实现支持标准输出的最小系统。</li>
-</ul>
-<h3 id="2023年2月"><a class="header" href="#2023年2月">2023年2月</a></h3>
-<ul>
-<li><input disabled="" type="checkbox" checked=""/>
-实现一个单道批处理系统。</li>
-<li><input disabled="" type="checkbox" checked=""/>
-实现一个多道批处理系统。</li>
-<li><input disabled="" type="checkbox" checked=""/>
-实现一个分时系统。</li>
-</ul>
-<h3 id="2023年3月"><a class="header" href="#2023年3月">2023年3月</a></h3>
-<ul>
-<li><input disabled="" type="checkbox" checked=""/>
-实现内存管理。</li>
-<li><input disabled="" type="checkbox"/>
-实现进程管理。</li>
-</ul>
-<h3 id="2023年4月"><a class="header" href="#2023年4月">2023年4月</a></h3>
-<ul>
-<li><input disabled="" type="checkbox"/>
-实现文件系统。</li>
-<li><input disabled="" type="checkbox"/>
-实现设备管理。</li>
-<li><input disabled="" type="checkbox"/>
-实现并发控制。</li>
+<li><a href="https://rcore-os.cn/rCore-Tutorial-Book-v3/index.html">rCore-Tutorial-Book 第三版</a></li>
+<li><a href="https://pdos.csail.mit.edu/6.828/2022/index.html">6.1810: Operating System Engineering</a></li>
+<li><a href="https://github.com/mit-pdos/xv6-riscv">xv6-riscv</a></li>
 </ul>
 
                     </main>
 
                     <nav class="nav-wrapper" aria-label="Page navigation">
                         <!-- Mobile navigation buttons -->
-                            <a rel="next" href="guide/index.html" class="mobile-nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                                <i class="fa fa-angle-right"></i>
+                            <a rel="prev" href="solution/memory.html" class="mobile-nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                                <i class="fa fa-angle-left"></i>
                             </a>
                         <div style="clear: both"></div>
                     </nav>
@@ -185,8 +156,8 @@
             </div>
 
             <nav class="nav-wide-wrapper" aria-label="Page navigation">
-                    <a rel="next" href="guide/index.html" class="nav-chapters next" title="Next chapter" aria-label="Next chapter" aria-keyshortcuts="Right">
-                        <i class="fa fa-angle-right"></i>
+                    <a rel="prev" href="solution/memory.html" class="nav-chapters previous" title="Previous chapter" aria-label="Previous chapter" aria-keyshortcuts="Left">
+                        <i class="fa fa-angle-left"></i>
                     </a>
             </nav>
 
